@@ -12,7 +12,91 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true,
+        "scope": [
+
+        ]
+      },
+
+
+      "path": {
+        "all": true
+      },
+
+
+      "shell": {
+        "execute": true,
+        "open": "^*",
+        "scope": [
+          {
+            "name": "conda-env-update",
+            "cmd": "conda",
+            "args": [
+              "env",
+              "update",
+              "--prefix", { "validator": "\\S+" },
+              "--file", { "validator": "\\S+" }
+            ]
+          },
+          {
+            "name": "conda-activate",
+            "cmd": "conda",
+            "args": [
+              "activate",
+              "./condaenv"
+            ]
+          },
+          {
+            "name": "pip-version",
+            "cmd": "./python",
+            "args": [
+              "pip",
+              "--version"
+            ]
+          },
+          {
+            "name": "pip-install-requirements",
+            "cmd": "./python",
+            "args": [
+              "pip",
+              "install",
+              "-r", { "validator": "\\S+" }
+            ]
+          },
+          {
+            "name": "jupyter-lab",
+            "cmd": "./python",
+            "args": [
+              "jupyter",
+              "lab"
+            ]
+          },
+          {
+            "name": "open-folder",
+            "cmd": "open",
+            "args": [
+              { "validator": "\\S+" }
+            ]
+          },
+          
+          {
+            "name": "jupyter",
+            "sidecar": false,
+            "cmd": "jupyter",
+            "args": ["lab", "--allow-root"]
+          }
+        ]
+      }
     },
     "bundle": {
       "active": true,
@@ -29,7 +113,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "librobase.dev",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -38,7 +122,9 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": [
+        "resources/*"
+      ],
       "shortDescription": "",
       "targets": "all",
       "windows": {
@@ -58,7 +144,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "librobase",
+        "title": "Libro Base",
         "width": 800
       }
     ]
