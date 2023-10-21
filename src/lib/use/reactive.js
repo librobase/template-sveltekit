@@ -2,10 +2,8 @@ import { writable, get } from 'svelte/store'
 
 // -----------------------------------------------------------------------------
 export function store(obj) {
-  // create a writable store
   let { subscribe, set, update } = writable(obj)
 
-  // define a stringify function
   let getObj = () => {
     let obj = get({ subscribe })
     return obj

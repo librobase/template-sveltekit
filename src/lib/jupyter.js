@@ -1,94 +1,179 @@
-import { ServerConnection, ServiceManager } from '@jupyterlab/services'
+import {
+  writable,
+  get
+} from 'svelte/store'
 
-import reactive from '$lib/use/reactive'
-import localStorage from '$lib/use/localStorage'
+import {
+  ServerConnection,
+  ServiceManager
+} from '@jupyterlab/services'
+
+import sessionStorage from '$lib/use/sessionStorage'
 
 // -----------------------------------------------------------------------------
-export let $ = reactive.store({
-  serviceManager: null,
-  url: 'http://localhost:8888',
-  running: reactive.store({}), // { session1: boolean, session2: boolean }
+let serviceManager = null
+
+// -----------------------------------------------------------------------------
+let { subscribe, set, update } = writable({
+  url: '',
+  connected: false,
+  running: {} // { session1: true, session2: true }
 })
 
 // -----------------------------------------------------------------------------
-export async function setup() {
-  let url = localStorage.get('jupyter.url')
+async function reload() {
+  let url = sessionStorage.get('jupyter.url')
 
   if (url)
     await connect(url)
 }
 
 // -----------------------------------------------------------------------------
-export async function connect(url) {
-  // if it is already connected to this server do nothing.
-  if ($['serviceManager'] && $['url'] == url)
+async function connect(url) {
+  let store = get({ subscribe })
+
+  // if this server is already connected, do nothing
+  if (store.url == url && store.connected)
     return
   
-  let serviceManager = await newServiceManager(url)
+  // check server status
+  let serverStatus = null
+  try {
+    let urlObj = new URL(url)
+    urlObj.pathname = '/api/status'
+    let res = await fetch(urlObj)
+    serverStatus = await res.json()
+  }
+  catch(err) {}
+
+  serverStatus = serverStatus? true : false
+
+  // if server is not available
+  if (!serverStatus) {
+    serviceManager = null
+    store.connected = false
+    set(store)
+    return
+  }
+  
+  // create server connection object
+  let urlObj = new URL(url)
+  let host = urlObj.host
+  let token = urlObj.searchParams.get('token')
+  token = token? token : ''
+
+  let serverConnectionOptions = {
+    baseUrl: `http://${host}`,
+    wsUrl: `ws://${host}`,
+    appUrl: ``,
+    token: `${token}`
+  }
+
+  // create server settings
+  let serverSettings = ServerConnection.makeSettings(serverConnectionOptions)
+  
+  // create service manager
+  serviceManager = new ServiceManager({ serverSettings })
 
   if (serviceManager) {
-    $['serviceManager'] = serviceManager
-    $['url'] = url
-    
-    localStorage.set('jupyter.url', $['url'])
+    store.url = url
+    store.connected = true
+    set(store)
+
+    sessionStorage.set('jupyter.url', url)
+
+    await serviceManager.ready
   }
   else {
-    $['serviceManager'] = null
+    serviceManager = null
+    store.connected = false
+    set(store)
   }
 }
 
 // -----------------------------------------------------------------------------
-export async function disconnect() {
+async function disconnect() {
+  let store = get({ subscribe })
+
   try {
-    $['serviceManager'].dispose()
+    serviceManager.dispose()
   }
   catch(err) {}
   finally {
-    $['serviceManager'] = null
+    serviceManager = null
+    store.url = ''
+    store.connected = false
+    set(store)
+
+    sessionStorage.remove('jupyter.url')
   }
 }
 
 // -----------------------------------------------------------------------------
-export async function run({
-  serviceManager = $['serviceManager'],
+async function execute({
   session,
   code = '',
-  onStatus = () => {},
-  onBusy = () => {},
-  onIdle = () => {},
-  onExecuteInput = () => {},
-  onDisplayData = () => {},
-  onStream = () => {},
-  onError = (msg) => { console.log(msg) },
-  onIOPub = (msg) => { console.log(msg) },
+  onIOPub = msg => {},
+  onStatus = msg => {},
+  onExecuteInput = msg => {},
+  onDisplayData = msg => {},
+  onStream = msg => {},
+  onError = msg => {},
   onReply = () => {}
 }) {
-  
-  let sessionModel = await serviceManager.sessions.findByPath(session)
-  if (!sessionModel)
-    sessionModel = await startSession(serviceManager, session)
 
+  let store = get({ subscribe })
+  
+  // find session
+  let sessionModel = await serviceManager.sessions.findByPath(session)
+
+  // if session does not exist, create it
+  if (!sessionModel) {
+    let createOptions = {
+      path: session,
+      type: "notebook",
+      name: session,
+      kernel: {
+        name: "python"
+      }
+    }
+    let connectOptions = {
+      clientId: 'username',
+      username: 'username',
+      kernelConnectionOptions: {
+        handleComms: undefined
+      }
+    }
+    
+    let sessionConnection = await serviceManager.sessions.startNew(createOptions, connectOptions)
+    sessionModel = await serviceManager.sessions.findByPath(session)
+  }
+
+  // connect to session and execute code
   let sessionConnection = await serviceManager.sessions.connectTo({ model: sessionModel })
   let future = sessionConnection.kernel.requestExecute({ code, store_history: false })
 
+  // handle all messages
   future.onIOPub = (msg) => {
+    onIOPub(msg)
+    
     let type = msg['header']['msg_type']
     if (type == 'status') {
       onStatus(msg)
-      if (msg['content']['execution_state'] == 'busy') {
-        $['running'][session] = true
-        onBusy(msg)
-      }
-      else if (msg['content']['execution_state'] == 'idle') {
-        $['running'][session] = false
-        onIdle(msg)
-      }
+      if (msg['content']['execution_state'] == 'busy')
+        store.running[session] = true
+      else if (msg['content']['execution_state'] == 'idle')
+        store.running[session] = false
+      set(store)
     }
     else if (type == 'execute_input') onExecuteInput(msg)
     else if (type == 'display_data')  onDisplayData(msg)
     else if (type == 'stream')        onStream(msg)
     else if (type == 'error')         onError(msg)
-    else                              onIOPub(msg)
+    else {
+      console.log('un-handled message from jupyter:')
+      console.log(msg)
+    }
   }
 
   let status = false
@@ -103,98 +188,25 @@ export async function run({
 }
 
 // -----------------------------------------------------------------------------
-export async function shutdown({
-  serviceManager = $['serviceManager'],
-  session
-}) {
+async function shutdown(session) {
+  let store = get({ subscribe })
+
   let sessionModel = await serviceManager.sessions.findByPath(session)
-  console.log(sessionModel)
   await serviceManager.sessions.shutdown(sessionModel.id)
-  console.log(serviceManager)
-}
-
-// -----------------------------------------------------------------------------
-async function getServerStatus(url) {
-  let status = null
-
-  try {
-    let urlObj = new URL(url)
-    urlObj.pathname = '/api/status'
-    let res = await fetch(urlObj)
-    status = await res.json()
-  }
-  catch(err) {}
-
-  return status
-}
-
-// -----------------------------------------------------------------------------
-async function isServerAvailable(url) {
-  let status = await getServerStatus(url)
-  return status? true : false
-}
-
-// -----------------------------------------------------------------------------
-function getServerConnectionObj(url) {
-  let urlObj = new URL(url)
-  let host = urlObj.host
-  let token = urlObj.searchParams.get('token')
-  token = token? token : ''
-
-  let obj = {
-    baseUrl: `http://${host}`,
-    wsUrl: `ws://${host}`,
-    appUrl: ``,
-    token: `${token}`
-  }
-
-  return obj
-}
-
-// -----------------------------------------------------------------------------
-async function newServiceManager(url) {
-  let available = await isServerAvailable(url)
-
-  if (!available)
-    return null
   
-  let connectionObj = getServerConnectionObj(url)
-  let serverSettings = ServerConnection.makeSettings(connectionObj)
-  let serviceManager = new ServiceManager({ serverSettings })
-  await serviceManager.ready
-
-  return serviceManager
-}
-
-// -----------------------------------------------------------------------------
-async function startSession(serviceManager, path) {
-  let createOptions = {
-    path: path,
-    type: "notebook",
-    name: path,
-    kernel: {
-      name: "python"
-    }
-  }
-
-  let connectOptions = {
-    clientId: 'username',
-    username: 'username',
-    kernelConnectionOptions: {
-      handleComms: undefined
-    }
-  }
-
-  let sessionConnection = await serviceManager.sessions.startNew(createOptions, connectOptions)
-  let sessionModel = await serviceManager.sessions.findByPath(path)
-  return sessionModel
+  store.running[session] = false
+  set(store)
 }
 
 // -----------------------------------------------------------------------------
 export default {
-  $,
-  setup,
+  // store
+  subscribe,
+  set,
+  // functions
+  reload,
   connect,
-  run,
+  disconnect,
+  execute,
   shutdown
 }
