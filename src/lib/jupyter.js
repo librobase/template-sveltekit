@@ -13,7 +13,6 @@ import sessionStorage from '$lib/sessionStorage'
 // -----------------------------------------------------------------------------
 let serviceManager = null
 
-// -----------------------------------------------------------------------------
 let { subscribe, set, update } = writable({
   url: '',
   connected: false,
@@ -33,7 +32,7 @@ async function connect(url) {
   let store = get({ subscribe })
 
   // if this server is already connected, do nothing
-  if (store.url == url && store.connected)
+  if (store.url === url && store.connected)
     return
   
   // check server status
@@ -52,6 +51,7 @@ async function connect(url) {
   if (!serverStatus) {
     serviceManager = null
     store.connected = false
+    store.running = {}
     set(store)
     return
   }
@@ -78,6 +78,7 @@ async function connect(url) {
   if (serviceManager) {
     store.url = url
     store.connected = true
+    store.running = {}
     set(store)
 
     sessionStorage.set('jupyter.url', url)
@@ -87,6 +88,7 @@ async function connect(url) {
   else {
     serviceManager = null
     store.connected = false
+    store.running = {}
     set(store)
   }
 }
@@ -103,6 +105,7 @@ async function disconnect() {
     serviceManager = null
     store.url = ''
     store.connected = false
+    store.running = {}
     set(store)
 
     sessionStorage.remove('jupyter.url')
@@ -144,7 +147,6 @@ async function execute({
         handleComms: undefined
       }
     }
-    
     let sessionConnection = await serviceManager.sessions.startNew(createOptions, connectOptions)
     sessionModel = await serviceManager.sessions.findByPath(session)
   }
@@ -158,18 +160,18 @@ async function execute({
     onIOPub(msg)
     
     let type = msg['header']['msg_type']
-    if (type == 'status') {
+    if (type === 'status') {
       onStatus(msg)
-      if (msg['content']['execution_state'] == 'busy')
+      if (msg['content']['execution_state'] === 'busy')
         store.running[session] = true
-      else if (msg['content']['execution_state'] == 'idle')
+      else if (msg['content']['execution_state'] === 'idle')
         store.running[session] = false
       set(store)
     }
-    else if (type == 'execute_input') onExecuteInput(msg)
-    else if (type == 'display_data')  onDisplayData(msg)
-    else if (type == 'stream')        onStream(msg)
-    else if (type == 'error')         onError(msg)
+    else if (type === 'execute_input') onExecuteInput(msg)
+    else if (type === 'display_data')  onDisplayData(msg)
+    else if (type === 'stream')        onStream(msg)
+    else if (type === 'error')         onError(msg)
     else {
       console.log('un-handled message from jupyter:')
       console.log(msg)
@@ -179,7 +181,7 @@ async function execute({
   let status = false
 
   future.onReply = (msg) => {
-    status = (msg.content.status == 'ok')
+    status = (msg.content.status === 'ok')
     onReply(msg)
   }
 
@@ -199,6 +201,40 @@ async function shutdown(session) {
 }
 
 // -----------------------------------------------------------------------------
+async function interrupt(session) {
+  let store = get({ subscribe })
+
+  let sessionModel = await serviceManager.sessions.findByPath(session)
+  try {
+    let kernelId = sessionModel.kernel.id
+    let urlObj = new URL(store.url)
+    urlObj.pathname = `/api/kernels/${kernelId}/interrupt`
+    let res = await fetch(urlObj)
+    
+    store.running[session] = false
+    set(store)
+  }
+  catch(err) {}
+}
+
+// -----------------------------------------------------------------------------
+async function restart(session) {
+  let store = get({ subscribe })
+
+  let sessionModel = await serviceManager.sessions.findByPath(session)
+  try {
+    let kernelId = sessionModel.kernel.id
+    let urlObj = new URL(store.url)
+    urlObj.pathname = `/api/kernels/${kernelId}/restart`
+    let res = await fetch(urlObj)
+    
+    store.running[session] = false
+    set(store)
+  }
+  catch(err) {}
+}
+
+// -----------------------------------------------------------------------------
 export default {
   // store
   subscribe,
@@ -208,5 +244,7 @@ export default {
   connect,
   disconnect,
   execute,
-  shutdown
+  shutdown,
+  interrupt,
+  restart
 }
