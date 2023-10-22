@@ -1,7 +1,7 @@
 import * as tauriShell from '@tauri-apps/api/shell'
 
 // -----------------------------------------------------------------------------
-export async function execute({
+async function execute({
   cmd = '',
   args = undefined,
   options = undefined,
@@ -25,7 +25,7 @@ export async function execute({
 }
 
 // -----------------------------------------------------------------------------
-export async function spawn({
+async function spawn({
   cmd = '',
   args = undefined,
   options = undefined,
@@ -43,7 +43,7 @@ export async function spawn({
 }
 
 // -----------------------------------------------------------------------------
-export async function open({
+async function open({
   path = '',
   openWith = undefined
 }) {
