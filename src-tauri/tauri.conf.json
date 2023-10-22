@@ -49,22 +49,6 @@
             ]
           },
           {
-            "name": "conda-activate",
-            "cmd": "conda",
-            "args": [
-              "activate",
-              "./condaenv"
-            ]
-          },
-          {
-            "name": "pip-version",
-            "cmd": "./python",
-            "args": [
-              "pip",
-              "--version"
-            ]
-          },
-          {
             "name": "pip-install-requirements",
             "cmd": "./python",
             "args": [
@@ -74,26 +58,12 @@
             ]
           },
           {
-            "name": "jupyter-lab",
+            "name": "run-jupyter-lab",
             "cmd": "./python",
             "args": [
               "jupyter",
               "lab"
             ]
-          },
-          {
-            "name": "open-folder",
-            "cmd": "open",
-            "args": [
-              { "validator": "\\S+" }
-            ]
-          },
-          
-          {
-            "name": "jupyter",
-            "sidecar": false,
-            "cmd": "jupyter",
-            "args": ["lab", "--allow-root"]
           }
         ]
       }
@@ -123,7 +93,7 @@
         "signingIdentity": null
       },
       "resources": [
-        "resources/*"
+        "assets/*"
       ],
       "shortDescription": "",
       "targets": "all",
