@@ -24,7 +24,9 @@
         "renameFile": true,
         "exists": true,
         "scope": [
-
+          "$RESOURCE",
+          "$RESOURCE/*",
+          "$RESOURCE/*/**"
         ]
       },
 
@@ -59,11 +61,8 @@
           },
           {
             "name": "run-jupyter-lab",
-            "cmd": "./python",
-            "args": [
-              "jupyter",
-              "lab"
-            ]
+            "cmd": "./jupyter-lab",
+            "args": []
           }
         ]
       }

@@ -1,22 +1,23 @@
-import {
-  writable,
-  get
-} from 'svelte/store'
-
 import path from '$lib/path'
 import shell from '$lib/shell'
 
 // -----------------------------------------------------------------------------
-let condaenvPath = await path.resolveResource('condaenv')
-let condaenvBinPath = await path.resolveResource('condaenv', 'bin')
+let condaenvPath = ''
+let condaenvBinPath = ''
 
-let environmentYamlPath = await path.resolveResource('assets', 'conda', 'environment.yaml')
-let requirementsTxtPath = await path.resolveResource('assets', 'conda', 'requirements.txt')
+let environmentYamlPath = ''
+let requirementsTxtPath = ''
 
-let { subscribe, set, update } = writable({
-  condaenvUpdated: false,
-  requirementsInstalled: false
-})
+reload()
+
+// -----------------------------------------------------------------------------
+async function reload() {
+  condaenvPath = await path.resolveResource('condaenv')
+  condaenvBinPath = await path.resolveResource('condaenv', 'bin')
+
+  environmentYamlPath = await path.resolveResource('assets', 'conda', 'environment.yaml')
+  requirementsTxtPath = await path.resolveResource('assets', 'conda', 'requirements.txt')
+}
 
 // -----------------------------------------------------------------------------
 async function updateEnvironment({
@@ -24,8 +25,6 @@ async function updateEnvironment({
   onStderr = msg => {},
   onError  = msg => {}
 }) {
-
-  let store = get({ subscribe })
 
   let output = await shell.execute({
     cmd: 'conda-env-update',
@@ -40,11 +39,6 @@ async function updateEnvironment({
     onError : msg => onError(msg)
   })
 
-  if (output.code === 0) {
-    store.condaenvUpdated = true
-    set(store)
-  }
-
   return output
 }
 
@@ -54,8 +48,6 @@ async function installRequirements({
   onStderr = msg => {},
   onError  = msg => {}
 }) {
-
-  let store = get({ subscribe })
 
   let output = await shell.execute({
     cmd: 'pip-install-requirements',
@@ -71,11 +63,6 @@ async function installRequirements({
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
   })
-
-  if (output.code === 0) {
-    store.requirementsInstalled = true
-    set(store)
-  }
   
   return output
 }
@@ -86,8 +73,6 @@ async function runJupyterLab({
   onStderr = msg => {},
   onError  = msg => {}
 }) {
-
-  let store = get({ subscribe })
 
   let output = await shell.execute({
     cmd: 'run-jupyter-lab',
@@ -108,10 +93,6 @@ async function runJupyterLab({
 
 // -----------------------------------------------------------------------------
 export default {
-  // store
-  subscribe,
-  set,
-  // functions
   updateEnvironment,
   installRequirements,
   runJupyterLab

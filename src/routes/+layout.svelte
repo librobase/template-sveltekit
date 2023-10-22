@@ -12,7 +12,7 @@
 
 <PPane>
   <VPane>
-
+    
     <svelte:fragment slot="center">
       <SPane class="bg-gray-50 text-sm">
         <slot />
