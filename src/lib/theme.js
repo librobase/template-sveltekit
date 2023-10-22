@@ -1,47 +1,59 @@
+import {
+  writable,
+  get
+} from 'svelte/store'
+
 import { browser } from '$app/environment'
 
-import reactive from '$lib/reactive'
 import localStorage from '$lib/localStorage'
 
 // -----------------------------------------------------------------------------
-export let $ = reactive.store({
+let { subscribe, set, update } = writable({
   state: 'light'
 })
 
+subscribe(store => {
+  localStorage.set('theme.state', store.state)
+  if (browser)
+    (store.state === 'dark')
+      ? document.body.classList.add('dark')
+      : document.body.classList.remove('dark')
+})
+
 // -----------------------------------------------------------------------------
-export function setup() {
-  let states = ['light', 'dark']
+function reload() {
+  let store = get({ subscribe })
 
   let state = localStorage.get('theme.state')
 
-  if (state === null)
-    state = 'light'
-  else if (!states.includes(state))
-    state = 'light'
-  
-  $['state'] = state
+  let states = ['light', 'dark']
 
-  // subscribe: listen to store
-  $.subscribe(obj => {
-    localStorage.set('theme.state', $['state'])
-    if (browser)
-      ($['state'] == 'dark')
-        ? document.body.classList.add('dark')
-        : document.body.classList.remove('dark')
-  })
+  if (state === null)
+    store.state = 'light'
+  else if (!states.includes(state))
+    store.state = 'light'
+  
+  set(store)
 }
 
 // -----------------------------------------------------------------------------
-export function toggle() {
-  if ($['state'] == 'dark')
-    $['state'] = 'light'
+function toggle() {
+  let store = get({ subscribe })
+
+  if (store.state === 'dark')
+    store.state = 'light'
   else
-  $['state'] = 'dark'
+    store.state = 'dark'
+
+  set(store)
 }
 
 // -----------------------------------------------------------------------------
 export default {
-  $,
-  setup,
+  // store
+  subscribe,
+  set,
+  // functions
+  reload,
   toggle
 }
