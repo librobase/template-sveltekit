@@ -14,6 +14,7 @@ async function execute({
 
   command.stdout.on('data', msg => onStdout(msg))
   command.stderr.on('data', msg => onStderr(msg))
+  command.on('error', msg => onError(msg))
 
   let output = await command.execute()
 
@@ -30,13 +31,15 @@ async function spawn({
   args = undefined,
   options = undefined,
   onStdout = msg => {},
-  onStderr = msg => {}
+  onStderr = msg => {},
+  onError = msg => {}
 }) {
 
   let command = new tauriShell.Command(cmd, args, options)
 
   command.stdout.on('data', msg => onStdout(msg))
   command.stderr.on('data', msg => onStderr(msg))
+  command.on('error', msg => onError(msg))
 
   let child = await command.spawn()
   return child
