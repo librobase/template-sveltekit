@@ -1,40 +1,102 @@
+import {
+  writable,
+  get
+} from 'svelte/store'
+
 import path from '$lib/path'
 import shell from '$lib/shell'
 
 // -----------------------------------------------------------------------------
-export async function updateEnvironment({
+let condaenvPath = await path.resolveResource('condaenv')
+let condaenvBinPath = await path.resolveResource('condaenv', 'bin')
+
+let environmentYamlPath = await path.resolveResource('assets', 'conda', 'environment.yaml')
+let requirementsTxtPath = await path.resolveResource('assets', 'conda', 'requirements.txt')
+
+let { subscribe, set, update } = writable({
+  condaenvUpdated: false,
+  requirementsInstalled: false
+})
+
+// -----------------------------------------------------------------------------
+async function updateEnvironment({
   onStdout = msg => {},
   onStderr = msg => {},
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
   let output = await shell.execute({
     cmd: 'conda-env-update',
     args: [
-      "env",
-      "update",
-      "--prefix", `${await path.resolveResource('resources', 'condaenv')}`,
-      "--file", `${await path.resolveResource('resources', 'conda', 'environment.yaml')}`
+      'env',
+      'update',
+      '--prefix', condaenvPath,
+      '--file', environmentYamlPath
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
   })
 
+  if (output.code === 0) {
+    store.condaenvUpdated = true
+    set(store)
+  }
+
   return output
 }
 
 // -----------------------------------------------------------------------------
-export async function getPipVersion({
+async function installRequirements({
   onStdout = msg => {},
   onStderr = msg => {},
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
   let output = await shell.execute({
-    cmd: 'pip-version',
+    cmd: 'pip-install-requirements',
+    args: [
+      'pip',
+      'install',
+      '-r', requirementsTxtPath
+    ],
     options: {
-      cwd: await path.resolveAppData('condaenv', 'bin')
+      cwd: condaenvBinPath
+    },
+    onStdout: msg => onStdout(msg),
+    onStderr: msg => onStderr(msg),
+    onError : msg => onError(msg)
+  })
+
+  if (output.code === 0) {
+    store.requirementsInstalled = true
+    set(store)
+  }
+  
+  return output
+}
+
+// -----------------------------------------------------------------------------
+async function runJupyterLab({
+  onStdout = msg => {},
+  onStderr = msg => {},
+  onError  = msg => {}
+}) {
+
+  let store = get({ subscribe })
+
+  let output = await shell.execute({
+    cmd: 'run-jupyter-lab',
+    args: [
+      'jupyter',
+      'lab'
+    ],
+    options: {
+      cwd: condaenvBinPath
     },
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -46,6 +108,11 @@ export async function getPipVersion({
 
 // -----------------------------------------------------------------------------
 export default {
+  // store
+  subscribe,
+  set,
+  // functions
   updateEnvironment,
-  getPipVersion
+  installRequirements,
+  runJupyterLab
 }
