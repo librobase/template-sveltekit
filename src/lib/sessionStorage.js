@@ -1,26 +1,26 @@
 import { browser } from '$app/environment'
 
 // -----------------------------------------------------------------------------
-export function set(key, value) {
+function set(key, value) {
   if (browser)
     sessionStorage.setItem(key, value)
 }
 
 // -----------------------------------------------------------------------------
-export function get(key) {
+function get(key) {
   if (browser)
     return sessionStorage.getItem(key)
   return null
 }
 
 // -----------------------------------------------------------------------------
-export function remove(key) {
+function remove(key) {
   if (browser)
     sessionStorage.removeItem(key)
 }
 
 // -----------------------------------------------------------------------------
-export function clear() {
+function clear() {
   if (browser)
     sessionStorage.clear()
 }
