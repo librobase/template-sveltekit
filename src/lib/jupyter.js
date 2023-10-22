@@ -8,7 +8,7 @@ import {
   ServiceManager
 } from '@jupyterlab/services'
 
-import sessionStorage from '$lib/use/sessionStorage'
+import sessionStorage from '$lib/sessionStorage'
 
 // -----------------------------------------------------------------------------
 let serviceManager = null

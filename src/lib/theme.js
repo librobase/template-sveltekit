@@ -1,7 +1,7 @@
 import { browser } from '$app/environment'
 
-import reactive from '$lib/use/reactive'
-import localStorage from '$lib/use/localStorage'
+import reactive from '$lib/reactive'
+import localStorage from '$lib/localStorage'
 
 // -----------------------------------------------------------------------------
 export let $ = reactive.store({
