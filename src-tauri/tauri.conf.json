@@ -52,8 +52,11 @@
           },
           {
             "name": "pip-install-requirements",
-            "cmd": "./python",
+            "cmd": "conda",
             "args": [
+              "run",
+              "-p", { "validator": "\\S+" },
+              "--live-stream",
               "pip",
               "install",
               "-r", { "validator": "\\S+" }
@@ -61,8 +64,13 @@
           },
           {
             "name": "run-jupyter-lab",
-            "cmd": "./jupyter-lab",
-            "args": []
+            "cmd": "conda",
+            "args": [
+              "run",
+              "-p", { "validator": "\\S+" },
+              "--live-stream",
+              "jupyter", "lab"
+            ]
           }
         ]
       }

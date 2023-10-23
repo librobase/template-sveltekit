@@ -52,6 +52,9 @@ async function installRequirements({
   let output = await shell.execute({
     cmd: 'pip-install-requirements',
     args: [
+      'run',
+      '-p', condaenvPath,
+      '--live-stream',
       'pip',
       'install',
       '-r', requirementsTxtPath
@@ -77,12 +80,11 @@ async function runJupyterLab({
   let output = await shell.execute({
     cmd: 'run-jupyter-lab',
     args: [
-      'jupyter',
-      'lab'
+      'run',
+      '-p', condaenvPath,
+      '--live-stream',
+      'jupyter', 'lab'
     ],
-    options: {
-      cwd: condaenvBinPath
-    },
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
