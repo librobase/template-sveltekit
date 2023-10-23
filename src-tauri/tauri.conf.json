@@ -36,6 +36,13 @@
       },
 
 
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": ["http://localhost:8888/*"]
+      },
+
+
       "shell": {
         "execute": true,
         "open": "^*",
@@ -70,6 +77,22 @@
               "-p", { "validator": "\\S+" },
               "--live-stream",
               "jupyter", "lab"
+            ]
+          },
+          {
+            "name": "run-jupyter-server",
+            "cmd": "conda",
+            "args": [
+              "run",
+              "-p", { "validator": "\\S+" },
+              "--live-stream",
+              "jupyter", "server",
+              "--ServerApp.token=''",
+              "--ServerApp.password=''",
+              "--ServerApp.allow_origin='*'",
+              "--ServerApp.ip=8888",
+              "--ServerApp.allow_remote_access=True",
+              "--ServerApp.disable_check_xsrf=True"
             ]
           }
         ]

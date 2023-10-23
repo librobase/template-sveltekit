@@ -3,6 +3,8 @@ import {
   get
 } from 'svelte/store'
 
+import { fetch } from '@tauri-apps/api/http'
+
 import {
   ServerConnection,
   ServiceManager
@@ -34,17 +36,18 @@ async function connect(url) {
   // if this server is already connected, do nothing
   if (store.url === url && store.connected)
     return
-  
+
   // check server status
   let serverStatus = null
   try {
     let urlObj = new URL(url)
     urlObj.pathname = '/api/status'
     let res = await fetch(urlObj)
-    serverStatus = await res.json()
+    console.log(res)
+    serverStatus = res.ok
   }
   catch(err) {}
-
+  console.log(serverStatus)
   serverStatus = serverStatus? true : false
 
   // if server is not available

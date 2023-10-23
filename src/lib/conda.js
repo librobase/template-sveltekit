@@ -94,8 +94,38 @@ async function runJupyterLab({
 }
 
 // -----------------------------------------------------------------------------
+async function runJupyterServer({
+  onStdout = msg => {},
+  onStderr = msg => {},
+  onError  = msg => {}
+}) {
+
+  let output = await shell.execute({
+    cmd: 'run-jupyter-server',
+    args: [
+      "run",
+      "-p", condaenvPath,
+      "--live-stream",
+      "jupyter", "server",
+      "--ServerApp.token", "''",
+      "--ServerApp.password", "''",
+      "--ServerApp.allow_origin", "'*'",
+      "--ServerApp.ip", "'*'",
+      "--ServerApp.allow_remote_access", "True",
+      "--ServerApp.disable_check_xsrf", "True"
+    ],
+    onStdout: msg => onStdout(msg),
+    onStderr: msg => onStderr(msg),
+    onError : msg => onError(msg)
+  })
+  
+  return output
+}
+
+// -----------------------------------------------------------------------------
 export default {
   updateEnvironment,
   installRequirements,
-  runJupyterLab
+  runJupyterLab,
+  runJupyterServer
 }
