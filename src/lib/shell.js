@@ -3,6 +3,7 @@ import * as tauriShell from '@tauri-apps/api/shell'
 // -----------------------------------------------------------------------------
 async function execute({
   cmd = '',
+  sidecar = '',
   args = undefined,
   options = undefined,
   onStdout = msg => {},
@@ -10,7 +11,14 @@ async function execute({
   onError = msg => {}
 }) {
 
-  let command = new tauriShell.Command(cmd, args, options)
+  let command = null
+
+  if (cmd)
+    command = new tauriShell.Command(cmd, args, options)
+  else if (sidecar)
+    command = tauriShell.Command.sidecar(sidecar, args, options)
+  else
+    throw new Error('Define cmd or sidecar.')
 
   command.stdout.on('data', msg => onStdout(msg))
   command.stderr.on('data', msg => onStderr(msg))

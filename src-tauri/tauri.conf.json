@@ -45,39 +45,18 @@
 
       "shell": {
         "execute": true,
+        "sidecar": true,
         "open": "^*",
         "scope": [
           {
-            "name": "conda-env-update",
-            "cmd": "conda",
-            "args": [
-              "env",
-              "update",
-              "--prefix", { "validator": "\\S+" },
-              "--file", { "validator": "\\S+" }
-            ]
+            "name": "bin/micromamba",
+            "sidecar": true,
+            "args": true
           },
           {
-            "name": "pip-install-requirements",
-            "cmd": "conda",
-            "args": [
-              "run",
-              "-p", { "validator": "\\S+" },
-              "--live-stream",
-              "pip",
-              "install",
-              "-r", { "validator": "\\S+" }
-            ]
-          },
-          {
-            "name": "run-jupyter-lab",
-            "cmd": "conda",
-            "args": [
-              "run",
-              "-p", { "validator": "\\S+" },
-              "--live-stream",
-              "jupyter", "lab"
-            ]
+            "name": "python",
+            "cmd": "$RESOURCE/prefix/bin/python",
+            "args": true
           },
           {
             "name": "run-jupyter-server",
@@ -105,7 +84,9 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [],
+      "externalBin": [
+        "bin/micromamba"
+      ],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -144,7 +125,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "Libro Base",
+        "title": "LibroBase",
         "width": 800
       }
     ]
