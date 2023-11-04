@@ -1,6 +1,6 @@
 <script>
   import conda from '$lib/conda'
-  import micromamba from '$lib/micromamba'
+  import venv from '$lib/venv'
   import jupyter from '$lib/jupyter'
   import shell from '$lib/shell'
   import path from '$lib/path'
@@ -42,7 +42,7 @@
   async function createEnvironment() {
     stdout = ''
     stderr = ''
-    let output = await micromamba.createEnvironment({
+    let output = await venv.createEnvironment({
       onStdout: msg => {
         stdout += msg
       },
@@ -61,7 +61,7 @@
   async function updateEnvironment() {
     stdout = ''
     stderr = ''
-    let output = await micromamba.updateEnvironment({
+    let output = await venv.updateEnvironment({
       onStdout: msg => {
         stdout += msg
       },
@@ -80,7 +80,7 @@
   async function installReqs() {
     stdout = ''
     stderr = ''
-    let output = await micromamba.installRequirements({
+    let output = await venv.installRequirements({
       onStdout: msg => {
         stdout += msg
       },
@@ -97,7 +97,7 @@
 
   // ---------------------------------------------------------------------------
   async function openEnvironment() {
-    await micromamba.openPrefix()
+    await venv.openPrefix()
   }
 
 
@@ -123,7 +123,7 @@
   async function runJupyterServer() {
     stdout = ''
     stderr = ''
-    let output = await micromamba.runJupyterServer({
+    let output = await venv.runJupyterServer({
       onStdout: msg => {
         stdout += msg
       },
@@ -142,7 +142,7 @@
   async function runJupyterLab() {
     stdout = ''
     stderr = ''
-    let output = await micromamba.runJupyterLab({
+    let output = await venv.runJupyterLab({
       onStdout: msg => {
         stdout += msg
       },
@@ -153,6 +153,24 @@
         errmsg += msg
       }
     })
+
+    console.log(output)
+  }
+
+
+  async function openPrefix() {
+    stdout = ''
+    stderr = ''
+    let output = await venv.openPrefix()
+
+    console.log(output)
+  }
+
+
+  async function openWorkspace() {
+    stdout = ''
+    stderr = ''
+    let output = await venv.openWorkspace()
 
     console.log(output)
   }
@@ -189,6 +207,8 @@
     <button on:click={openEnvironment}>open menv</button>
     <button on:click={runJupyterServer}>run jupyter server</button>
     <button on:click={runJupyterLab}>run jupyter lab</button>
+    <button on:click={openPrefix}>open prefix</button>
+    <button on:click={openWorkspace}>open workspace</button>
     <!--button on:click={runJupyterServer}>run jupyter server</button>
     <button on:click={connectjupyter}>connect to jupyter</button>
     <hr>

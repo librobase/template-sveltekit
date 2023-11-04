@@ -3,23 +3,40 @@ import {
   get
 } from 'svelte/store'
 
-import { invoke } from '@tauri-apps/api/tauri'
-
 import path from '$lib/path'
 import shell from '$lib/shell'
+import rust from '$lib/rust'
+import sessionStorage from '$lib/sessionStorage'
+import { resolveResource } from '@tauri-apps/api/path'
 
 // -----------------------------------------------------------------------------
-let prefix = ''
-let environmentYamlPath = ''
-let requirementsTxtPath = ''
+let { subscribe, set, update } = writable({
+  prefix: '',
+  environmentYamlPath: '',
+  requirementsTxtPath: '',
+  
+  workspace: '',
+
+  jupyterServerPort: '',
+  jupyterServerToken: '',
+
+  jupyterLabPort: '',
+  jupyterLabToken: '',
+})
 
 reload()
 
 // -----------------------------------------------------------------------------
 async function reload() {
-  prefix = await path.resolveResource('prefix')
-  environmentYamlPath = await path.resolveResource('assets', 'environment.yaml')
-  requirementsTxtPath = await path.resolveResource('assets', 'requirements.txt')
+  let store = get({ subscribe })
+
+  store.prefix = await path.resolveResource('prefix')
+  store.environmentYamlPath = await path.resolveResource('assets', 'environment.yaml')
+  store.requirementsTxtPath = await path.resolveResource('assets', 'requirements.txt')
+
+  store.workspace = await path.resolveResource('workspace')
+
+  set (store)
 }
 
 // -----------------------------------------------------------------------------
@@ -29,13 +46,15 @@ async function createEnvironment({
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
   let output = await shell.execute({
     sidecar: 'bin/micromamba',
     args: [
       '--yes',
       'create',
-      '--prefix', prefix,
-      '--file', environmentYamlPath
+      '--prefix', store.prefix,
+      '--file', store.environmentYamlPath
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -52,13 +71,15 @@ async function updateEnvironment({
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
   let output = await shell.execute({
     sidecar: 'bin/micromamba',
     args: [
       '--yes',
       'update',
-      '--prefix', prefix,
-      '--file', environmentYamlPath
+      '--prefix', store.prefix,
+      '--file', store.environmentYamlPath
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -75,13 +96,15 @@ async function installRequirements({
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
   let output = await shell.execute({
     cmd: 'python',
     args: [
       '-m',
       'pip',
       'install',
-      '-r', requirementsTxtPath
+      '-r', store.requirementsTxtPath
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -98,14 +121,24 @@ async function runJupyterServer({
   onError  = msg => {}
 }) {
 
+  let store = get({ subscribe })
+
+  store.jupyterServerPort = `${await rust.invoke('free_port')}`
+  store.jupyterServerToken = crypto.randomUUID()
+  set (store)
+
+  sessionStorage.set('jupyterServer.port', store.jupyterServerPort)
+  sessionStorage.set('jupyterServer.token', store.jupyterServerToken)
+
   let output = await shell.execute({
     cmd: 'python',
     args: [
       '-m',
       'jupyter', 'server',
-      `--ServerApp.port=1402`,
-      `--IdentityProvider.token='salam'`
+      `--ServerApp.port=${store.jupyterServerPort}`,
+      `--IdentityProvider.token='${store.jupyterServerToken}'`
     ],
+    options: { cwd: store.workspace },
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
@@ -121,17 +154,24 @@ async function runJupyterLab({
   onError  = msg => {}
 }) {
 
-  let ppp = await invoke('free_port')
-  console.log(ppp)
+  let store = get({ subscribe })
+
+  store.jupyterLabPort = `${await rust.invoke('free_port')}`
+  store.jupyterLabToken = crypto.randomUUID()
+  set (store)
+
+  sessionStorage.set('jupyterLab.port', store.jupyterLabPort)
+  sessionStorage.set('jupyterLab.token', store.jupyterLabToken)
 
   let output = await shell.execute({
     cmd: 'python',
     args: [
       '-m',
       'jupyter', 'lab',
-      `--ServerApp.port=${ppp}`,
-      `--IdentityProvider.token='salam'`
+      `--ServerApp.port=${store.jupyterLabPort}`,
+      `--IdentityProvider.token='${store.jupyterLabToken}'`
     ],
+    options: { cwd: store.workspace },
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
@@ -142,15 +182,29 @@ async function runJupyterLab({
 
 // -----------------------------------------------------------------------------
 async function openPrefix() {
-  shell.open({ path: prefix })
+  let store = get({ subscribe })
+
+  shell.open({ path: store.prefix })
+}
+
+// -----------------------------------------------------------------------------
+async function openWorkspace() {
+  let store = get({ subscribe })
+
+  shell.open({ path: store.workspace })
 }
 
 // -----------------------------------------------------------------------------
 export default {
+  // store
+  subscribe,
+  set,
+  // functions
   createEnvironment,
   updateEnvironment,
   installRequirements,
   runJupyterServer,
   runJupyterLab,
-  openPrefix
+  openPrefix,
+  openWorkspace
 }
