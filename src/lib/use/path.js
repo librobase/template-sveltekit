@@ -19,6 +19,12 @@ async function extname(dir) {
 }
 
 // -----------------------------------------------------------------------------
+async function join(...dirs) {
+  let p = tauriPath.join(...dirs)
+  return p
+}
+
+// -----------------------------------------------------------------------------
 async function resolveResource(...dirs) {
   let base = await tauriPath.resourceDir()
   let p = await tauriPath.resolve(base, ...dirs)
@@ -93,6 +99,7 @@ export default {
   dirname,
   basename,
   extname,
+  join,
 
   resolveResource,
 

@@ -5,7 +5,7 @@ import {
 
 import { browser } from '$app/environment'
 
-import localStorage from '$lib/localStorage'
+import localStorage from '$lib/use/localStorage'
 
 // -----------------------------------------------------------------------------
 let { subscribe, set, update } = writable({

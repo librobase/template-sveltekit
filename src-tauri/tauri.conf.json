@@ -54,25 +54,14 @@
             "args": true
           },
           {
-            "name": "python",
-            "cmd": "$RESOURCE/prefix/bin/python",
+            "name": "conda",
+            "cmd": "conda",
             "args": true
           },
           {
-            "name": "run-jupyter-server",
-            "cmd": "conda",
-            "args": [
-              "run",
-              "-p", { "validator": "\\S+" },
-              "--live-stream",
-              "jupyter", "server",
-              "--ServerApp.token=''",
-              "--ServerApp.password=''",
-              "--ServerApp.allow_origin='*'",
-              "--ServerApp.ip=8888",
-              "--ServerApp.allow_remote_access=True",
-              "--ServerApp.disable_check_xsrf=True"
-            ]
+            "name": "python",
+            "cmd": "$RESOURCE/prefix/bin/python",
+            "args": true
           }
         ]
       }

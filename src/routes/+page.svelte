@@ -1,9 +1,8 @@
 <script>
-  import conda from '$lib/conda'
-  import venv from '$lib/venv'
-  import jupyter from '$lib/jupyter'
-  import shell from '$lib/shell'
-  import path from '$lib/path'
+  import micromamba from '$lib/stores/micromamba'
+  import python from '$lib/stores/python'
+  import directory from '$lib/stores/directory'
+  import jupyter from '$lib/stores/jupyter'
 
   let stdout = ''
   let stderr = ''
@@ -12,37 +11,13 @@
 
   let pystdout = ''
 
-  async function echoPath() {
-    stdout = ''
-    stderr = ''
 
-    let envmap = new Map()
-    envmap.set('a', 'salaaaaam')
-    let pp = await path.resolveAppData()
-    console.log(pp)
-    // envmap.set('PATH', pp)
-    //envmap.set('PATH', '/usr/local/bin')
-    let output = await shell.execute({
-      cmd: 'echo',
-      args: [
-        'PATH'
-      ],
-      options: {
-        env: envmap
-      },
-      onStdout: msg => stdout += msg,
-      onStderr: msg => stderr += msg,
-      onError : msg => errmsg  = msg
-    })
-
-    console.log(output)
-  }
 
   // ---------------------------------------------------------------------------
   async function createEnvironment() {
     stdout = ''
     stderr = ''
-    let output = await venv.createEnvironment({
+    let output = await micromamba.createEnvironment({
       onStdout: msg => {
         stdout += msg
       },
@@ -61,7 +36,7 @@
   async function updateEnvironment() {
     stdout = ''
     stderr = ''
-    let output = await venv.updateEnvironment({
+    let output = await micromamba.updateEnvironment({
       onStdout: msg => {
         stdout += msg
       },
@@ -80,7 +55,7 @@
   async function installReqs() {
     stdout = ''
     stderr = ''
-    let output = await venv.installRequirements({
+    let output = await python.installRequirements({
       onStdout: msg => {
         stdout += msg
       },
@@ -95,35 +70,12 @@
     console.log(output)
   }
 
-  // ---------------------------------------------------------------------------
-  async function openEnvironment() {
-    await venv.openPrefix()
-  }
-
-
-  async function installRequirements() {
-    stdout = ''
-    stderr = ''
-    let output = await conda.installRequirements({
-      onStdout: msg => {
-        stdout += msg
-      },
-      onStderr: msg => {
-        stderr += msg
-      },
-      onError: msg => {
-        errmsg += msg
-      }
-    })
-
-    console.log(output)
-  }
 
 
   async function runJupyterServer() {
     stdout = ''
     stderr = ''
-    let output = await venv.runJupyterServer({
+    let output = await python.runJupyterServer({
       onStdout: msg => {
         stdout += msg
       },
@@ -142,7 +94,7 @@
   async function runJupyterLab() {
     stdout = ''
     stderr = ''
-    let output = await venv.runJupyterLab({
+    let output = await python.runJupyterLab({
       onStdout: msg => {
         stdout += msg
       },
@@ -161,7 +113,7 @@
   async function openPrefix() {
     stdout = ''
     stderr = ''
-    let output = await venv.openPrefix()
+    let output = await directory.openPrefix()
 
     console.log(output)
   }
@@ -170,7 +122,7 @@
   async function openWorkspace() {
     stdout = ''
     stderr = ''
-    let output = await venv.openWorkspace()
+    let output = await directory.openWorkspace()
 
     console.log(output)
   }
@@ -204,7 +156,6 @@
     <button on:click={createEnvironment}>create env</button>
     <button on:click={updateEnvironment}>update env</button>
     <button on:click={installReqs}>install reqs</button>
-    <button on:click={openEnvironment}>open menv</button>
     <button on:click={runJupyterServer}>run jupyter server</button>
     <button on:click={runJupyterLab}>run jupyter lab</button>
     <button on:click={openPrefix}>open prefix</button>
