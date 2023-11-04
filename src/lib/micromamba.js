@@ -3,19 +3,23 @@ import {
   get
 } from 'svelte/store'
 
+import { invoke } from '@tauri-apps/api/tauri'
+
 import path from '$lib/path'
 import shell from '$lib/shell'
 
 // -----------------------------------------------------------------------------
-let prefixPath = ''
+let prefix = ''
 let environmentYamlPath = ''
+let requirementsTxtPath = ''
 
 reload()
 
 // -----------------------------------------------------------------------------
 async function reload() {
-  prefixPath = await path.resolveResource('prefix')
-  environmentYamlPath = await path.resolveResource('assets', 'mamba', 'environment.yaml')
+  prefix = await path.resolveResource('prefix')
+  environmentYamlPath = await path.resolveResource('assets', 'environment.yaml')
+  requirementsTxtPath = await path.resolveResource('assets', 'requirements.txt')
 }
 
 // -----------------------------------------------------------------------------
@@ -30,7 +34,7 @@ async function createEnvironment({
     args: [
       '--yes',
       'create',
-      '--prefix', prefixPath,
+      '--prefix', prefix,
       '--file', environmentYamlPath
     ],
     onStdout: msg => onStdout(msg),
@@ -53,8 +57,54 @@ async function updateEnvironment({
     args: [
       '--yes',
       'update',
-      '--prefix', prefixPath,
+      '--prefix', prefix,
       '--file', environmentYamlPath
+    ],
+    onStdout: msg => onStdout(msg),
+    onStderr: msg => onStderr(msg),
+    onError : msg => onError(msg)
+  })
+
+  return output
+}
+
+// -----------------------------------------------------------------------------
+async function installRequirements({
+  onStdout = msg => {},
+  onStderr = msg => {},
+  onError  = msg => {}
+}) {
+
+  let output = await shell.execute({
+    cmd: 'python',
+    args: [
+      '-m',
+      'pip',
+      'install',
+      '-r', requirementsTxtPath
+    ],
+    onStdout: msg => onStdout(msg),
+    onStderr: msg => onStderr(msg),
+    onError : msg => onError(msg)
+  })
+
+  return output
+}
+
+// -----------------------------------------------------------------------------
+async function runJupyterServer({
+  onStdout = msg => {},
+  onStderr = msg => {},
+  onError  = msg => {}
+}) {
+
+  let output = await shell.execute({
+    cmd: 'python',
+    args: [
+      '-m',
+      'jupyter', 'server',
+      `--ServerApp.port=1402`,
+      `--IdentityProvider.token='salam'`
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -71,33 +121,16 @@ async function runJupyterLab({
   onError  = msg => {}
 }) {
 
+  let ppp = await invoke('free_port')
+  console.log(ppp)
+
   let output = await shell.execute({
     cmd: 'python',
     args: [
       '-m',
-      'jupyter', 'lab'
-    ],
-    onStdout: msg => onStdout(msg),
-    onStderr: msg => onStderr(msg),
-    onError : msg => onError(msg)
-  })
-
-  return output
-}
-
-// -----------------------------------------------------------------------------
-async function stopJupyterLab({
-  onStdout = msg => {},
-  onStderr = msg => {},
-  onError  = msg => {}
-}) {
-
-  let output = await shell.execute({
-    cmd: 'micromamba-create',
-    args: [
-      '-y',
-      'ps',
-      'stop', 'jupyterlab_process'
+      'jupyter', 'lab',
+      `--ServerApp.port=${ppp}`,
+      `--IdentityProvider.token='salam'`
     ],
     onStdout: msg => onStdout(msg),
     onStderr: msg => onStderr(msg),
@@ -109,13 +142,15 @@ async function stopJupyterLab({
 
 // -----------------------------------------------------------------------------
 async function openPrefix() {
-  shell.open({ path: prefixPath })
+  shell.open({ path: prefix })
 }
 
 // -----------------------------------------------------------------------------
 export default {
   createEnvironment,
   updateEnvironment,
-  openPrefix,
-  runJupyterLab
+  installRequirements,
+  runJupyterServer,
+  runJupyterLab,
+  openPrefix
 }

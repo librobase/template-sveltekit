@@ -104,7 +104,8 @@
         "signingIdentity": null
       },
       "resources": [
-        "assets/*"
+        "assets/*",
+        "workspace/*"
       ],
       "shortDescription": "",
       "targets": "all",

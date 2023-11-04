@@ -77,6 +77,25 @@
   }
 
   // ---------------------------------------------------------------------------
+  async function installReqs() {
+    stdout = ''
+    stderr = ''
+    let output = await micromamba.installRequirements({
+      onStdout: msg => {
+        stdout += msg
+      },
+      onStderr: msg => {
+        stderr += msg
+      },
+      onError: msg => {
+        errmsg += msg
+      }
+    })
+
+    console.log(output)
+  }
+
+  // ---------------------------------------------------------------------------
   async function openEnvironment() {
     await micromamba.openPrefix()
   }
@@ -86,6 +105,25 @@
     stdout = ''
     stderr = ''
     let output = await conda.installRequirements({
+      onStdout: msg => {
+        stdout += msg
+      },
+      onStderr: msg => {
+        stderr += msg
+      },
+      onError: msg => {
+        errmsg += msg
+      }
+    })
+
+    console.log(output)
+  }
+
+
+  async function runJupyterServer() {
+    stdout = ''
+    stderr = ''
+    let output = await micromamba.runJupyterServer({
       onStdout: msg => {
         stdout += msg
       },
@@ -119,23 +157,7 @@
     console.log(output)
   }
 
-  async function runJupyterServer() {
-    stdout = ''
-    stderr = ''
-    let output = await conda.runJupyterServer({
-      onStdout: msg => {
-        stdout += msg
-      },
-      onStderr: msg => {
-        stderr += msg
-      },
-      onError: msg => {
-        errmsg += msg
-      }
-    })
-
-    console.log(output)
-  }
+  
 
 
   async function connectjupyter() {
@@ -161,10 +183,11 @@
 <section class="p-3 flex flex-col gap-1">
   
   <dir>
-    <button on:click={echoPath}>echo $PATH</button>
-    <button on:click={createEnvironment}>create menv</button>
-    <button on:click={updateEnvironment}>update menv</button>
+    <button on:click={createEnvironment}>create env</button>
+    <button on:click={updateEnvironment}>update env</button>
+    <button on:click={installReqs}>install reqs</button>
     <button on:click={openEnvironment}>open menv</button>
+    <button on:click={runJupyterServer}>run jupyter server</button>
     <button on:click={runJupyterLab}>run jupyter lab</button>
     <!--button on:click={runJupyterServer}>run jupyter server</button>
     <button on:click={connectjupyter}>connect to jupyter</button>
