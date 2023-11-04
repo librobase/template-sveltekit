@@ -2,26 +2,20 @@ import * as tauriPath from '@tauri-apps/api/path'
 
 // -----------------------------------------------------------------------------
 async function dirname(dir) {
-  let p = await tauriPath.dirname(dir)
-  return p
+  let n = await tauriPath.dirname(dir)
+  return n
 }
 
 // -----------------------------------------------------------------------------
 async function basename(dir) {
-  let p = await tauriPath.basename(dir)
-  return p
+  let n = await tauriPath.basename(dir)
+  return n
 }
 
 // -----------------------------------------------------------------------------
 async function extname(dir) {
-  let p = await tauriPath.extname(dir)
-  return p
-}
-
-// -----------------------------------------------------------------------------
-async function resolve(...dirs) {
-  let p = await tauriPath.resolve(...dirs)
-  return p
+  let n = await tauriPath.extname(dir)
+  return n
 }
 
 // -----------------------------------------------------------------------------
@@ -99,13 +93,15 @@ export default {
   dirname,
   basename,
   extname,
-  resolve,
+
   resolveResource,
+
   resolveAppCache,
   resolveAppConfig,
   resolveAppData,
   resolveAppLocalData,
   resolveAppLog,
+
   resolveHome,
   resolveDesktop,
   resolveDocument,
