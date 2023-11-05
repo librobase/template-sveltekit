@@ -5,7 +5,7 @@ description = ""
 authors = ["Mohammad Pishahang"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "librobase"
 edition = "2021"
 rust-version = "1.60"
 

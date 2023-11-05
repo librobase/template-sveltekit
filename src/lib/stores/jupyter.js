@@ -72,15 +72,11 @@ async function connect(url) {
   try {
     let urlObj = new URL(url)
     urlObj.pathname = '/api/status/'
-    console.log(urlObj)
     let res = await fetch(urlObj)
-    console.log(res)
     serverStatus = res.ok
   }
   catch(err) {}
-  console.log(serverStatus)
   serverStatus = serverStatus? true : false
-  console.log(serverStatus)
 
   // if server is not available
   if (!serverStatus) {
@@ -88,6 +84,7 @@ async function connect(url) {
     store.connected = false
     store.running = {}
     set(store)
+    console.log('jupyter server not available.')
     return
   }
   

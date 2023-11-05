@@ -71,6 +71,17 @@ async function runJupyterServer({
   let port = await freePort()
   let token = uuid.generate()
 
+  let store = get({ subscribe })
+  let prevPort = store.jupyterServerPort
+  let prevToken = store.jupyterServerToken
+
+  store.jupyterServerPort = `${port}`
+  store.jupyterServerToken = token
+  set (store)
+
+  sessionStorage.set('jupyterServer.port', port)
+  sessionStorage.set('jupyterServer.token', token)
+
   let output = await shell.execute({
     cmd: 'python',
     args: [
@@ -93,17 +104,15 @@ async function runJupyterServer({
     onError : msg => onError(msg)
   })
 
-  if (output.code)
-    return output
-  
-  let store = get({ subscribe })
-  store.jupyterServerPort = `${port}`
-  store.jupyterServerToken = token
-  set (store)
+  if (output.code) {
+    store.jupyterServerPort = `${prevPort}`
+    store.jupyterServerToken = prevToken
+    set (store)
 
-  sessionStorage.set('jupyterServer.port', port)
-  sessionStorage.set('jupyterServer.token', token)
-  
+    sessionStorage.set('jupyterServer.port', prevPort)
+    sessionStorage.set('jupyterServer.token', prevToken)
+  }
+
   return output
 }
 
@@ -116,6 +125,17 @@ async function runJupyterLab({
 
   let port = await freePort()
   let token = uuid.generate()
+
+  let store = get({ subscribe })
+  let prevPort = store.jupyterLabPort
+  let prevToken = store.jupyterLabToken
+
+  store.jupyterLabPort = `${port}`
+  store.jupyterLabToken = token
+  set (store)
+
+  sessionStorage.set('jupyterLab.port', port)
+  sessionStorage.set('jupyterLab.token', token)
 
   let output = await shell.execute({
     cmd: 'python',
@@ -139,16 +159,14 @@ async function runJupyterLab({
     onError : msg => onError(msg)
   })
 
-  if (output.code)
-    return output
-  
-  let store = get({ subscribe })
-  store.jupyterLabPort = `${port}`
-  store.jupyterLabToken = token
-  set (store)
+  if (output.code) {
+    store.jupyterLabPort = `${prevPort}`
+    store.jupyterLabToken = prevToken
+    set (store)
 
-  sessionStorage.set('jupyterLab.port', port)
-  sessionStorage.set('jupyterLab.token', token)
+    sessionStorage.set('jupyterLab.port', prevPort)
+    sessionStorage.set('jupyterLab.token', prevToken)
+  }
   
   return output
 }

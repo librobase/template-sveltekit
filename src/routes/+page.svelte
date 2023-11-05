@@ -28,8 +28,6 @@
         errmsg += msg
       }
     })
-
-    console.log(output)
   }
 
   // ---------------------------------------------------------------------------
@@ -47,8 +45,6 @@
         errmsg += msg
       }
     })
-
-    console.log(output)
   }
 
   // ---------------------------------------------------------------------------
@@ -66,8 +62,6 @@
         errmsg += msg
       }
     })
-
-    console.log(output)
   }
 
 
@@ -86,8 +80,6 @@
         errmsg += msg
       }
     })
-
-    console.log(output)
   }
 
 
@@ -105,8 +97,6 @@
         errmsg += msg
       }
     })
-
-    console.log(output)
   }
 
 
@@ -114,8 +104,6 @@
     stdout = ''
     stderr = ''
     let output = await directory.openPrefix()
-
-    console.log(output)
   }
 
 
@@ -123,8 +111,6 @@
     stdout = ''
     stderr = ''
     let output = await directory.openWorkspace()
-
-    console.log(output)
   }
 
 
@@ -132,15 +118,17 @@
     stdout = ''
     stderr = ''
     let output = await directory.openAssets()
-
-    console.log(output)
   }
 
   
 
 
-  async function connectjupyter() {
+  async function connectjupyterServer() {
     await jupyter.connectJupyterServer()
+  }
+
+  async function connectjupyterLab() {
+    await jupyter.connectJupyterLab()
   }
 
 
@@ -153,8 +141,6 @@
         //pystdout += msg
       }
     })
-
-    console.log(output)
   }
 </script>
 
@@ -166,12 +152,13 @@
     <button on:click={updateEnvironment}>update env</button>
     <button on:click={installReqs}>install reqs</button>
     <button on:click={runJupyterServer}>run jupyter server</button>
-    <!--button on:click={runJupyterLab}>run jupyter lab</button-->
+    <button on:click={runJupyterLab}>run jupyter lab</button>
     <button on:click={openPrefix}>open prefix</button>
     <button on:click={openWorkspace}>open workspace</button>
     <button on:click={openAssets}>open Assets</button>
 
-    <button on:click={connectjupyter}>connect to jupyter</button>
+    <button on:click={connectjupyterServer}>connect to jupyter server</button>
+    <button on:click={connectjupyterLab}>connect to jupyter lab</button>
     <hr>
     <input type="text" bind:value={pycodetxt}>
     <button on:click={runPyCode}>run py code</button>
