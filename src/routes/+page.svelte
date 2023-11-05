@@ -163,9 +163,11 @@
     <input type="text" bind:value={pycodetxt}>
     <button on:click={runPyCode}>run py code</button>
   </dir>
-  {$jupyter.connected}
+  jupyter connected: {$jupyter.connected}
   <hr>
   micromamba busy: {$micromamba.busy}
+  <br>
+  python busy: {$python.busy}
   <hr>
   <pre class="text-blue-500">{stdout}</pre>
   <hr>

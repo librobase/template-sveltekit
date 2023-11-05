@@ -11,6 +11,8 @@ import directory from '$lib/stores/directory'
 
 // -----------------------------------------------------------------------------
 let { subscribe, set, update } = writable({
+  busy: false,
+  
   jupyterServerPort: '',
   jupyterServerToken: '',
 
