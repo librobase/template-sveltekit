@@ -30,6 +30,30 @@ async function reload() {
 }
 
 // -----------------------------------------------------------------------------
+async function connectJupyterServer() {
+  let port = sessionStorage.get('jupyterServer.port')
+  let token = sessionStorage.get('jupyterServer.token')
+
+  let url = ''
+  
+  if (token)
+    url = `http://localhost:${port}/?token=${token}`
+  else
+    url = `http://localhost:${port}`
+
+  await connect(url)
+}
+
+// -----------------------------------------------------------------------------
+async function connectJupyterLab() {
+  let port = sessionStorage.get('jupyterLab.port')
+  let token = sessionStorage.get('jupyterLab.token')
+
+  let url = `http://localhost:${port}/?token=${token}`
+  await connect(url)
+}
+
+// -----------------------------------------------------------------------------
 async function connect(url) {
   let store = get({ subscribe })
 
@@ -42,6 +66,7 @@ async function connect(url) {
   try {
     let urlObj = new URL(url)
     urlObj.pathname = '/api/status'
+    console.log(urlObj)
     let res = await fetch(urlObj)
     console.log(res)
     serverStatus = res.ok
@@ -49,6 +74,7 @@ async function connect(url) {
   catch(err) {}
   console.log(serverStatus)
   serverStatus = serverStatus? true : false
+  console.log(serverStatus)
 
   // if server is not available
   if (!serverStatus) {
@@ -244,6 +270,8 @@ export default {
   set,
   // functions
   reload,
+  connectJupyterServer,
+  connectJupyterLab,
   connect,
   disconnect,
   execute,

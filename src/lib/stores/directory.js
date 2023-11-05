@@ -42,15 +42,21 @@ async function open(dir) {
 }
 
 // -----------------------------------------------------------------------------
-async function openPrefix() {
+async function openAssets() {
   let store = get({ subscribe })
-  open(store.prefix)
+  open(store.assets)
 }
 
 // -----------------------------------------------------------------------------
 async function openWorkspace() {
   let store = get({ subscribe })
   open(store.workspace)
+}
+
+// -----------------------------------------------------------------------------
+async function openPrefix() {
+  let store = get({ subscribe })
+  open(store.prefix)
 }
 
 // -----------------------------------------------------------------------------
@@ -61,6 +67,7 @@ export default {
   // functions
   reload,
   open,
-  openPrefix,
-  openWorkspace
+  openAssets,
+  openWorkspace,
+  openPrefix
 }

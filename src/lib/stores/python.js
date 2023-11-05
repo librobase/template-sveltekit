@@ -43,30 +43,60 @@ async function installRequirements({
 }
 
 // -----------------------------------------------------------------------------
+async function freePort() {
+  let port = ''
+
+  let output = await shell.execute({
+    cmd: 'python',
+    args: [
+      'free_port.py'
+    ],
+    options: {
+      cwd: get(directory).assets
+    },
+    onStdout: msg => { port = parseInt(msg) },
+    onStderr: msg => { console.log(msg) },
+    onError : msg => { console.log(msg) }
+  })
+
+  return port
+}
+
+// -----------------------------------------------------------------------------
 async function runJupyterServer({
   onStdout = msg => {},
   onStderr = msg => {},
   onError  = msg => {}
 }) {
 
-  let port = await localhost.freePort()
+  
+  //let port = await freePort()
+  let port = '8888'
+  console.log(port)
   let token = uuid.generate()
 
-  sessionStorage.set('jupyterServer.port', port)
-  sessionStorage.set('jupyterServer.token', token)
-
   let store = get({ subscribe })
+  let prev_port = store.jupyterServerPort
+  let prev_token = store.jupyterServerToken
   store.jupyterServerPort = `${port}`
   store.jupyterServerToken = token
   set (store)
+
+  sessionStorage.set('jupyterServer.port', port)
+  sessionStorage.set('jupyterServer.token', token)
 
   let output = await shell.execute({
     cmd: 'python',
     args: [
       '-m',
       'jupyter', 'server',
-      `--ServerApp.config_file='${get(directory).jupyter_server_config_py}'`,
       `--ServerApp.port=${port}`,
+      `--ServerApp.port_retries=0`,
+      `--ServerApp.allow_origin='*'`,
+      `--ServerApp.ip='localhost'`,
+      `--ServerApp.allow_remote_access=True`,
+      `--ServerApp.disable_check_xsrf=True`,
+      `--PasswordIdentityProvider.hashed_password=''`,
       `--IdentityProvider.token='${token}'`
     ],
     options: {
@@ -77,7 +107,17 @@ async function runJupyterServer({
     onError : msg => onError(msg)
   })
 
+  if (output.code) {
+    store.jupyterServerPort = `${prev_port}`
+    store.jupyterServerToken = prev_token
+    set (store)
+
+    sessionStorage.set('jupyterServer.port', prev_port)
+    sessionStorage.set('jupyterServer.token', prev_token)
+  }
+  
   return output
+  
 }
 
 // -----------------------------------------------------------------------------

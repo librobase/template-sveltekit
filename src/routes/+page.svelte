@@ -127,18 +127,27 @@
     console.log(output)
   }
 
+
+  async function openAssets() {
+    stdout = ''
+    stderr = ''
+    let output = await directory.openAssets()
+
+    console.log(output)
+  }
+
   
 
 
   async function connectjupyter() {
-    await jupyter.connect('http://localhost:8888')
+    await jupyter.connectJupyterServer()
   }
 
 
   async function runPyCode() {
     let output = await jupyter.execute({
       session: 'test',
-      code: pycodetxt,
+      code: 'print("hellooooooo")',
       onStream: msg => {
         console.log(msg)
         //pystdout += msg
@@ -157,14 +166,15 @@
     <button on:click={updateEnvironment}>update env</button>
     <button on:click={installReqs}>install reqs</button>
     <button on:click={runJupyterServer}>run jupyter server</button>
-    <button on:click={runJupyterLab}>run jupyter lab</button>
+    <!--button on:click={runJupyterLab}>run jupyter lab</button-->
     <button on:click={openPrefix}>open prefix</button>
     <button on:click={openWorkspace}>open workspace</button>
-    <!--button on:click={runJupyterServer}>run jupyter server</button>
+    <button on:click={openAssets}>open Assets</button>
+
     <button on:click={connectjupyter}>connect to jupyter</button>
     <hr>
     <input type="text" bind:value={pycodetxt}>
-    <button on:click={runPyCode}>run py code</button-->
+    <button on:click={runPyCode}>run py code</button>
   </dir>
   {$jupyter.connected}
   <hr>
