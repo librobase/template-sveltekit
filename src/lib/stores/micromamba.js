@@ -8,7 +8,16 @@ import shell from '$lib/use/shell'
 import directory from '$lib/stores/directory'
 
 // -----------------------------------------------------------------------------
-let { subscribe, set, update } = writable({})
+let { subscribe, set, update } = writable({
+  busy: false
+})
+
+// -----------------------------------------------------------------------------
+function busy(b) {
+  let store = get({ subscribe })
+  store.busy = b
+  set(store)
+}
 
 // -----------------------------------------------------------------------------
 async function createEnvironment({
@@ -16,6 +25,8 @@ async function createEnvironment({
   onStderr = msg => {},
   onError  = msg => {}
 }) {
+
+  busy(true)
 
   let output = await shell.execute({
     sidecar: 'bin/micromamba',
@@ -30,6 +41,8 @@ async function createEnvironment({
     onError : msg => onError(msg)
   })
 
+  busy(false)
+
   return output
 }
 
@@ -39,6 +52,8 @@ async function updateEnvironment({
   onStderr = msg => {},
   onError  = msg => {}
 }) {
+
+  busy(true)
 
   let output = await shell.execute({
     sidecar: 'bin/micromamba',
@@ -52,6 +67,8 @@ async function updateEnvironment({
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
   })
+
+  busy(false)
 
   return output
 }

@@ -165,6 +165,8 @@
   </dir>
   {$jupyter.connected}
   <hr>
+  micromamba busy: {$micromamba.busy}
+  <hr>
   <pre class="text-blue-500">{stdout}</pre>
   <hr>
   <pre  class="text-orange-500">{stderr}</pre>

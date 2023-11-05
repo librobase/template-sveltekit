@@ -19,11 +19,20 @@ let { subscribe, set, update } = writable({
 })
 
 // -----------------------------------------------------------------------------
+function busy(b) {
+  let store = get({ subscribe })
+  store.busy = b
+  set(store)
+}
+
+// -----------------------------------------------------------------------------
 async function installRequirements({
   onStdout = msg => {},
   onStderr = msg => {},
   onError  = msg => {}
 }) {
+
+  busy(true)
 
   let output = await shell.execute({
     cmd: 'python',
@@ -37,6 +46,8 @@ async function installRequirements({
     onStderr: msg => onStderr(msg),
     onError : msg => onError(msg)
   })
+
+  busy(false)
 
   return output
 }

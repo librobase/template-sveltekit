@@ -11,6 +11,13 @@ import directory from '$lib/stores/directory'
 let { subscribe, set, update } = writable({})
 
 // -----------------------------------------------------------------------------
+function busy(b) {
+  let store = get({ subscribe })
+  store.busy = b
+  set(store)
+}
+
+// -----------------------------------------------------------------------------
 async function createEnvironment({
   onStdout = msg => {},
   onStderr = msg => {},
