@@ -65,7 +65,7 @@ async function connect(url) {
   let serverStatus = null
   try {
     let urlObj = new URL(url)
-    urlObj.pathname = '/api/status'
+    urlObj.pathname = '/api/status/'
     console.log(urlObj)
     let res = await fetch(urlObj)
     console.log(res)

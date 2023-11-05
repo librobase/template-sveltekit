@@ -70,8 +70,8 @@ async function runJupyterServer({
 }) {
 
   
-  //let port = await freePort()
-  let port = '8888'
+  let port = await freePort()
+  // let port = '8889'
   console.log(port)
   let token = uuid.generate()
 
