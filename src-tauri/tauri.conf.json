@@ -12,6 +12,9 @@
   },
   "tauri": {
     "allowlist": {
+      "app": {},
+      "clipboard": {},
+      "dialog": {},
       "fs": {
         "all": true,
         "readFile": true,
@@ -29,20 +32,18 @@
           "$RESOURCE/*/**"
         ]
       },
-
-
-      "path": {
-        "all": true
-      },
-
-
+      "globalShortcut": {},
       "http": {
         "all": true,
         "request": true,
         "scope": ["http://*", "https://*"]
       },
-
-
+      "notification": {},
+      "os": {},
+      "path": {
+        "all": true
+      },
+      "process": {},
       "shell": {
         "execute": true,
         "sidecar": true,
@@ -64,7 +65,8 @@
             "args": true
           }
         ]
-      }
+      },
+      "window": {}
     },
     "bundle": {
       "active": true,
@@ -112,10 +114,10 @@
     },
     "windows": [
       {
-        "fullscreen": false,
+        "fullscreen": true,
         "height": 600,
         "resizable": true,
-        "title": "LibroBase",
+        "title": "Libro Base",
         "width": 800
       }
     ]

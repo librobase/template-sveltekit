@@ -5,7 +5,6 @@ import {
 
 import shell from '$lib/use/shell'
 import sessionStorage from '$lib/use/sessionStorage'
-import localhost from '$lib/use/localhost'
 import uuid from '$lib/use/uuid'
 
 import directory from '$lib/stores/directory'
@@ -69,21 +68,8 @@ async function runJupyterServer({
   onError  = msg => {}
 }) {
 
-  
   let port = await freePort()
-  // let port = '8889'
-  console.log(port)
   let token = uuid.generate()
-
-  let store = get({ subscribe })
-  let prev_port = store.jupyterServerPort
-  let prev_token = store.jupyterServerToken
-  store.jupyterServerPort = `${port}`
-  store.jupyterServerToken = token
-  set (store)
-
-  sessionStorage.set('jupyterServer.port', port)
-  sessionStorage.set('jupyterServer.token', token)
 
   let output = await shell.execute({
     cmd: 'python',
@@ -107,17 +93,18 @@ async function runJupyterServer({
     onError : msg => onError(msg)
   })
 
-  if (output.code) {
-    store.jupyterServerPort = `${prev_port}`
-    store.jupyterServerToken = prev_token
-    set (store)
+  if (output.code)
+    return output
+  
+  let store = get({ subscribe })
+  store.jupyterServerPort = `${port}`
+  store.jupyterServerToken = token
+  set (store)
 
-    sessionStorage.set('jupyterServer.port', prev_port)
-    sessionStorage.set('jupyterServer.token', prev_token)
-  }
+  sessionStorage.set('jupyterServer.port', port)
+  sessionStorage.set('jupyterServer.token', token)
   
   return output
-  
 }
 
 // -----------------------------------------------------------------------------
@@ -127,16 +114,8 @@ async function runJupyterLab({
   onError  = msg => {}
 }) {
 
-  let port = await localhost.freePort()
+  let port = await freePort()
   let token = uuid.generate()
-
-  sessionStorage.set('jupyterLab.port', port)
-  sessionStorage.set('jupyterLab.token', token)
-
-  let store = get({ subscribe })
-  store.jupyterLabPort = `${port}`
-  store.jupyterLabToken = token
-  set (store)
 
   let output = await shell.execute({
     cmd: 'python',
@@ -144,6 +123,12 @@ async function runJupyterLab({
       '-m',
       'jupyter', 'lab',
       `--ServerApp.port=${port}`,
+      `--ServerApp.port_retries=0`,
+      `--ServerApp.allow_origin='*'`,
+      `--ServerApp.ip='localhost'`,
+      `--ServerApp.allow_remote_access=True`,
+      `--ServerApp.disable_check_xsrf=True`,
+      `--PasswordIdentityProvider.hashed_password=''`,
       `--IdentityProvider.token='${token}'`
     ],
     options: {
@@ -154,6 +139,17 @@ async function runJupyterLab({
     onError : msg => onError(msg)
   })
 
+  if (output.code)
+    return output
+  
+  let store = get({ subscribe })
+  store.jupyterLabPort = `${port}`
+  store.jupyterLabToken = token
+  set (store)
+
+  sessionStorage.set('jupyterLab.port', port)
+  sessionStorage.set('jupyterLab.token', token)
+  
   return output
 }
 

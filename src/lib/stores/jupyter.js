@@ -49,7 +49,13 @@ async function connectJupyterLab() {
   let port = sessionStorage.get('jupyterLab.port')
   let token = sessionStorage.get('jupyterLab.token')
 
-  let url = `http://localhost:${port}/?token=${token}`
+  let url = ''
+  
+  if (token)
+    url = `http://localhost:${port}/?token=${token}`
+  else
+    url = `http://localhost:${port}`
+  
   await connect(url)
 }
 
