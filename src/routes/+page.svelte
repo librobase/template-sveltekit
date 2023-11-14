@@ -4,6 +4,8 @@
   import directory from '$lib/stores/directory'
   import jupyter from '$lib/stores/jupyter'
 
+
+
   let stdout = ''
   let stderr = ''
   let errmsg = ''
@@ -143,6 +145,8 @@
     })
   }
 </script>
+
+<a href="http://localhost:8888">Go to DataBruin</a>
 
 
 <section class="p-3 flex flex-col gap-1">
