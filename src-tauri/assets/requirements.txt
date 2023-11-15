@@ -1,2 +1,4 @@
 jupyter_server
 jupyterlab
+numpy
+matplotlib

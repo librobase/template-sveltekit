@@ -29,9 +29,8 @@
       await updateEnvironment()
       status = 'Checking Requirements'
       await installRequirements()
-      status = 'Running Jupyter Lab'
-      await runJupyterLab()
-      goto('/lab')
+      status = 'Running Jupyter Server'
+      await runJupyterServer()
     }
     else {
       console.log('prefix does not exist')
@@ -39,9 +38,8 @@
       await createEnvironment()
       status = 'Installing Requirements'
       await installRequirements()
-      status = 'Running Jupyter Lab'
-      await runJupyterLab()
-      goto('/lab')
+      status = 'Running Jupyter Server'
+      await runJupyterServer()
     }
   })
   
@@ -97,17 +95,17 @@
   }
 
   // ---------------------------------------------------------------------------
-  async function runJupyterLab() {
+  async function runJupyterServer() {
     stdout = ''
     stderr = ''
-    let output = await python.runJupyterLabNoBrowser({
+    let output = await python.runJupyterServer({
       onStdout: msg => {
         stdout += msg
       },
       onStderr: msg => {
         stderr += msg
         if (stderr.includes('http://localhost')) {
-          goto('/lab')
+          goto('/home')
         }
       },
       onError: msg => {
