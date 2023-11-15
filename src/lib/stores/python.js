@@ -4,12 +4,15 @@ import {
 } from 'svelte/store'
 
 import shell from '$lib/use/shell'
+import os from '$lib/use/os'
 import sessionStorage from '$lib/use/sessionStorage'
 import uuid from '$lib/use/uuid'
 
 import directory from '$lib/stores/directory'
 
 // -----------------------------------------------------------------------------
+let pythonCmdName = ''
+
 let { subscribe, set, update } = writable({
   busy: false,
   
@@ -20,11 +23,25 @@ let { subscribe, set, update } = writable({
   jupyterLabToken: '',
 })
 
+reload()
+
 // -----------------------------------------------------------------------------
 function busy(b) {
   let store = get({ subscribe })
   store.busy = b
   set(store)
+}
+
+// -----------------------------------------------------------------------------
+async function reload() {
+  let osType = await os.type()
+
+  if (osType === 'Darwin')
+    pythonCmdName = 'python-macos'
+  else if (osType === 'Windows_NT')
+    pythonCmdName = 'python-win'
+  else
+    pythonCmdName = 'python-macos'
 }
 
 // -----------------------------------------------------------------------------
@@ -37,7 +54,7 @@ async function installRequirements({
   busy(true)
 
   let output = await shell.execute({
-    cmd: 'python',
+    cmd: pythonCmdName,
     args: [
       '-m',
       'pip',
@@ -59,7 +76,7 @@ async function freePort() {
   let port = ''
 
   let output = await shell.execute({
-    cmd: 'python',
+    cmd: pythonCmdName,
     args: [
       'free_port.py'
     ],
@@ -96,7 +113,7 @@ async function runJupyterServer({
   sessionStorage.set('jupyterServer.token', token)
 
   let output = await shell.execute({
-    cmd: 'python',
+    cmd: pythonCmdName,
     args: [
       '-m',
       'jupyter', 'server',
@@ -151,7 +168,7 @@ async function runJupyterLab({
   sessionStorage.set('jupyterLab.token', token)
 
   let output = await shell.execute({
-    cmd: 'python',
+    cmd: pythonCmdName,
     args: [
       '-m',
       'jupyter', 'lab',
@@ -162,7 +179,63 @@ async function runJupyterLab({
       `--ServerApp.allow_remote_access=True`,
       `--ServerApp.disable_check_xsrf=True`,
       `--PasswordIdentityProvider.hashed_password=''`,
-      `--IdentityProvider.token='${token}'`
+      `--IdentityProvider.token='${token}'`,
+    ],
+    options: {
+      cwd: get(directory).workspace
+    },
+    onStdout: msg => onStdout(msg),
+    onStderr: msg => onStderr(msg),
+    onError : msg => onError(msg)
+  })
+
+  if (output.code) {
+    store.jupyterLabPort = `${prevPort}`
+    store.jupyterLabToken = prevToken
+    set (store)
+
+    sessionStorage.set('jupyterLab.port', prevPort)
+    sessionStorage.set('jupyterLab.token', prevToken)
+  }
+  
+  return output
+}
+
+// -----------------------------------------------------------------------------
+async function runJupyterLabNoBrowser({
+  onStdout = msg => {},
+  onStderr = msg => {},
+  onError  = msg => {}
+}) {
+
+  let port = await freePort()
+  let token = uuid.generate()
+
+  let store = get({ subscribe })
+  let prevPort = store.jupyterLabPort
+  let prevToken = store.jupyterLabToken
+
+  store.jupyterLabPort = `${port}`
+  store.jupyterLabToken = token
+  set (store)
+
+  sessionStorage.set('jupyterLab.port', port)
+  sessionStorage.set('jupyterLab.token', token)
+
+  let output = await shell.execute({
+    cmd: pythonCmdName,
+    args: [
+      '-m',
+      'jupyter', 'lab',
+      `--ServerApp.port=${port}`,
+      `--ServerApp.port_retries=0`,
+      `--ServerApp.allow_origin='*'`,
+      `--ServerApp.ip='localhost'`,
+      `--ServerApp.allow_remote_access=True`,
+      `--ServerApp.disable_check_xsrf=True`,
+      `--PasswordIdentityProvider.hashed_password=''`,
+      `--IdentityProvider.token='${token}'`,
+      `--no-browser`
     ],
     options: {
       cwd: get(directory).workspace
@@ -190,7 +263,9 @@ export default {
   subscribe,
   set,
   // functions
+  reload,
   installRequirements,
   runJupyterServer,
-  runJupyterLab
+  runJupyterLab,
+  runJupyterLabNoBrowser
 }
