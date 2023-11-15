@@ -1,20 +1,50 @@
 <script>
+  import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
+
+  import fs from '$lib/use/fs'
+
   import micromamba from '$lib/stores/micromamba'
   import python from '$lib/stores/python'
   import directory from '$lib/stores/directory'
-  import jupyter from '$lib/stores/jupyter'
 
+  import VPane from '$lib/components/VPane.svelte'
+  import SPane from '$lib/components/SPane.svelte'
 
-
+  // ---------------------------------------------------------------------------
   let stdout = ''
   let stderr = ''
   let errmsg = ''
-  let pycodetxt = ''
+  let status = ''
 
-  let pystdout = ''
+  // ---------------------------------------------------------------------------
+  onMount(async () => {
+    await directory.reload()
 
+    let prefixExists = await fs.exists($directory.prefix)
 
-
+    if (prefixExists) {
+      console.log('prefix exists')
+      status = 'Checking Conda Environment'
+      await updateEnvironment()
+      status = 'Checking Requirements'
+      await installRequirements()
+      status = 'Running Jupyter Lab'
+      await runJupyterLab()
+      goto('/lab')
+    }
+    else {
+      console.log('prefix does not exist')
+      status = 'Creating Conda Environment'
+      await createEnvironment()
+      status = 'Installing Requirements'
+      await installRequirements()
+      status = 'Running Jupyter Lab'
+      await runJupyterLab()
+      goto('/lab')
+    }
+  })
+  
   // ---------------------------------------------------------------------------
   async function createEnvironment() {
     stdout = ''
@@ -50,7 +80,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  async function installReqs() {
+  async function installRequirements() {
     stdout = ''
     stderr = ''
     let output = await python.installRequirements({
@@ -66,117 +96,48 @@
     })
   }
 
-
-
-  async function runJupyterServer() {
-    stdout = ''
-    stderr = ''
-    let output = await python.runJupyterServer({
-      onStdout: msg => {
-        stdout += msg
-      },
-      onStderr: msg => {
-        stderr += msg
-      },
-      onError: msg => {
-        errmsg += msg
-      }
-    })
-  }
-
-
+  // ---------------------------------------------------------------------------
   async function runJupyterLab() {
     stdout = ''
     stderr = ''
-    let output = await python.runJupyterLab({
+    let output = await python.runJupyterLabNoBrowser({
       onStdout: msg => {
         stdout += msg
       },
       onStderr: msg => {
         stderr += msg
+        if (stderr.includes('http://localhost')) {
+          goto('/lab')
+        }
       },
       onError: msg => {
         errmsg += msg
-      }
-    })
-  }
-
-
-  async function openPrefix() {
-    stdout = ''
-    stderr = ''
-    let output = await directory.openPrefix()
-  }
-
-
-  async function openWorkspace() {
-    stdout = ''
-    stderr = ''
-    let output = await directory.openWorkspace()
-  }
-
-
-  async function openAssets() {
-    stdout = ''
-    stderr = ''
-    let output = await directory.openAssets()
-  }
-
-  
-
-
-  async function connectjupyterServer() {
-    await jupyter.connectJupyterServer()
-  }
-
-  async function connectjupyterLab() {
-    await jupyter.connectJupyterLab()
-  }
-
-
-  async function runPyCode() {
-    let output = await jupyter.execute({
-      session: 'test',
-      code: 'print("hellooooooo")',
-      onStream: msg => {
-        console.log(msg)
-        //pystdout += msg
       }
     })
   }
 </script>
 
-<a href="http://localhost:8888">Go to DataBruin</a>
+<!--/////////////////////////////////////////////////////////////////////////-->
 
+<VPane>
 
-<section class="p-3 flex flex-col gap-1">
-  
-  <dir>
-    <button on:click={createEnvironment}>create env</button>
-    <button on:click={updateEnvironment}>update env</button>
-    <button on:click={installReqs}>install reqs</button>
-    <button on:click={runJupyterServer}>run jupyter server</button>
-    <button on:click={runJupyterLab}>run jupyter lab</button>
-    <button on:click={openPrefix}>open prefix</button>
-    <button on:click={openWorkspace}>open workspace</button>
-    <button on:click={openAssets}>open Assets</button>
+  <svelte:fragment slot="top">
+    <SPane class="p-3 bg-gray-100">
+      <div class="p-3 flex flex-row justify-start content-center">
+        <div class="spinner mr-3" />
+        <span>{status}</span>
+      </div>
+    </SPane>
+  </svelte:fragment>
 
-    <button on:click={connectjupyterServer}>connect to jupyter server</button>
-    <button on:click={connectjupyterLab}>connect to jupyter lab</button>
-    <hr>
-    <input type="text" bind:value={pycodetxt}>
-    <button on:click={runPyCode}>run py code</button>
-  </dir>
-  jupyter connected: {$jupyter.connected}
   <hr>
-  micromamba busy: {$micromamba.busy}
-  <br>
-  python busy: {$python.busy}
-  <hr>
-  <pre class="text-blue-500">{stdout}</pre>
-  <hr>
-  <pre  class="text-orange-500">{stderr}</pre>
-  <hr>
-  <pre>{errmsg}</pre>
 
-</section>
+  <svelte:fragment slot="center">
+    <SPane class="p-3">
+      <pre class="text-gray-500">{stdout}</pre>
+      <hr>
+      <pre class="text-red-500">{stderr}</pre>
+    </SPane>
+  </svelte:fragment>
+
+</VPane>
