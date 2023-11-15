@@ -51,15 +51,20 @@
   <hr>
 
   <svelte:fragment slot="center">
-    <SPane class="p-3">
-      <div class="p-5">
+    <SPane class="container p-5">
+      <div class="flex flex-col gap-3">
+        min
         <input bind:value={minValue}>
+        max
         <input bind:value={maxValue}>
+        n points
         <input bind:value={nValue}>
-      </div>
       
-      <button on:click={drawSamplePlot}>Draw Plot</button>
-      <button on:click={() => {plotStr = ''}}>Clear Plot</button>
+        <div>
+          <button on:click={drawSamplePlot}>Draw <pre>y = sin(x)</pre></button>
+          <button on:click={() => {plotStr = ''}}>Clear Plot</button>
+        </div>
+      </div>
       <hr class="my-3">
       {#if plotStr !== ''}
         <img src="data:image/png;base64,{plotStr}" alt="">
