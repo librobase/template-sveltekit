@@ -16,6 +16,25 @@
     disabled:bg-transparent disabled:text-blue-300 disabled:border-blue-300;
   }
 
+  input, select {
+    @apply w-full
+    px-4 py-3
+    block
+    /*rounded-md*/
+    border border-gray-200
+    text-sm
+    focus:border-blue-500 focus:ring-blue-500;
+  }
+
+  input[type="checkbox"] {
+    @apply w-full
+    px-4 py-3
+    /*rounded-md*/
+    border border-gray-200
+    text-sm
+    focus:border-blue-500 focus:ring-blue-500;
+  }
+
   .spinner {
     @apply animate-spin 
     inline-block w-6 h-6 
